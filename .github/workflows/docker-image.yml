@@ -1,85 +1,61 @@
-name: OpenWebUI Auto-Sync
+name: Sync OpenWebUI with Customizations
 
 on:
-  schedule:
-    - cron: '0 0 * * *' # Exécution quotidienne
-  repository_dispatch: # Déclenchement manuel via API
   push:
     branches:
-      - 'main'
-      - 'develop'
+      - main
 
 jobs:
-  sync-and-update:
+  sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
 
-      - name: Nettoyage du dépôt Git
+      - name: Delete contents of 'app' directory
         run: |
-          git fsck --full --strict
-          git prune
-          git gc --aggressive
-
-      - name: Configurer upstream
-        run: |
-          git remote add upstream https://github.com/open-webui/open-webui.git
-          git fetch upstream
-
-      - name: Fusionner les changements (résolution des conflits)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git merge upstream/main --no-commit --no-ff --allow-unrelated-histories || true
-
-          # Liste des fichiers à conserver (overwrite conflicts)
-          CUSTOM_FILES="\
-            static/favicon.png\
-            static/opensearch.xml\
-            src/lib/constants.ts\
-            backend/open_webui/static/favicon.ico\
-            backend/open_webui/static/favicon.png\
-            static/static/*\
-            src/lib/components/layout/Sidebar/UserMenu.svelte\
-            config.js\
-            generate-config.sh\
-            Dockerfile\
-            src/app.html\
-            update_ollama_models.sh\
-          "
-
-          # Appliquer "ours" (conserver la version locale) pour les fichiers personnalisés
-          for file in $CUSTOM_FILES; do
-            if [[ -d "$file" ]]; then
-              # Si c'est un répertoire, checkout tous les fichiers à l'intérieur
-              find "$file" -type f -print0 | while IFS= read -r -d $'\0' f; do
-                git checkout --ours "$f"
-                git add "$f"
-              done
-            else
-              git checkout --ours "$file"
-              git add "$file"
-            fi
+          rm -rf app/*
+          find app -type f -print0 | while IFS= read -r -d $'\0' file; do
+            rm -f "$file"
+          done
+          find app -type d -empty -print0 | while IFS= read -r -d $'\0' dir; do
+            rmdir "$dir"
           done
 
-          # Accepter les modifications de "theirs" (upstream) pour les autres fichiers
-          git ls-files -u | cut -d ' ' -f 2 | while read -r conflicted_file; do
-            echo "Résolution du conflit pour $conflicted_file en utilisant 'theirs'"
-            git checkout --theirs "$conflicted_file"
-            git add "$conflicted_file"
-          done
+      - name: Copy 'custom-app' to 'app'
+        run: cp -r custom-app/. app/
 
-          # Tentative de commit, même si des conflits persistent (sera géré plus loin)
-          if git commit -m "Merge upstream + préservation des fichiers personnalisés"; then
-            echo "Commit réussi"
-          else
-            echo "Le commit a échoué. Vérifiez les conflits."
-            git status
-            exit 1
-          fi
+      - name: Checkout OpenWebUI
+        uses: actions/checkout@v4
+        with:
+          repository: open-webui/open-webui
+          ref: main
+          path: open-webui
+          fetch-depth: 0
 
+      - name: Merge OpenWebUI into 'app' (excluding conflicts)
+        run: |
+          rsync -av --delete \
+            --exclude='static/favicon.png' \
+            --exclude='static/opensearch.xml' \
+            --exclude='src/lib/constants.ts' \
+            --exclude='backend/open_webui/static/favicon.ico' \
+            --exclude='backend/open_webui/static/favicon.png' \
+            --exclude='static/static/*' \
+            --exclude='src/lib/components/layout/Sidebar/UserMenu.svelte' \
+            --exclude='config.js' \
+            --exclude='generate-config.sh' \
+            --exclude='Dockerfile' \
+            --exclude='src/app.html' \
+            --exclude='update_ollama_models.sh' \
+            open-webui/ app/
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add app/*
+          git commit -m "Sync with OpenWebUI and apply custom app" || echo "No changes to commit"
           git push origin main
