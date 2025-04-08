@@ -19,6 +19,12 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Nettoyage du dépôt Git
+        run: |
+          git fsck --full --strict
+          git prune
+          git gc --aggressive
+
       - name: Configurer upstream
         run: |
           git remote add upstream https://github.com/open-webui/open-webui.git
@@ -68,6 +74,12 @@ jobs:
           done
 
           # Tentative de commit, même si des conflits persistent (sera géré plus loin)
-          git commit -m "Merge upstream + préservation des fichiers personnalisés" || true
+          if git commit -m "Merge upstream + préservation des fichiers personnalisés"; then
+            echo "Commit réussi"
+          else
+            echo "Le commit a échoué. Vérifiez les conflits."
+            git status
+            exit 1
+          fi
 
           git push origin main
