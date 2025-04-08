@@ -32,8 +32,8 @@ jobs:
 
           # Liste des fichiers à conserver (overwrite conflicts)
           CUSTOM_FILES="\
-            frontend/static/favicon.png\
-            frontend/static/opensearch.xml\
+            static/favicon.png\
+            static/opensearch.xml\
             src/lib/constants.ts\
             backend/open_webui/static/favicon.ico\
             backend/open_webui/static/favicon.png\
