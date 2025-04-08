@@ -24,23 +24,29 @@ jobs:
           git remote add upstream https://github.com/open-webui/open-webui.git
           git fetch upstream
 
-      - name: Fusionner les changements (priorité à upstream sauf pour fichiers custom)
+      - name: Fusionner les changements (résolution des conflits)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git merge upstream/main --no-commit --no-ff --allow-unrelated-histories || true
-          git checkout HEAD -- frontend/static/favicon.png
-          git checkout HEAD -- frontend/static/opensearch.xml
-          git checkout HEAD -- src/lib/constants.ts
-          git checkout HEAD -- backend/open_webui/static/favicon.ico
-          git checkout HEAD -- backend/open_webui/static/favicon.png
-          git checkout HEAD -- static/static/*
-          git checkout HEAD -- src/lib/components/layout/Sidebar/UserMenu.svelte
-          git checkout HEAD -- config.js
-          git checkout HEAD -- generate-config.sh
-          git checkout HEAD -- Dockerfile
-          git checkout HEAD -- src/app.html
+
+          git checkout --ours frontend/static/favicon.png
+          git checkout --ours frontend/static/opensearch.xml
+          git checkout --ours src/lib/constants.ts
+          git checkout --ours backend/open_webui/static/favicon.ico
+          git checkout --ours backend/open_webui/static/favicon.png
+          git checkout --ours static/static/*
+          git checkout --ours src/lib/components/layout/Sidebar/UserMenu.svelte
+          git checkout --ours config.js
+          git checkout --ours generate-config.sh
+          git checkout --ours Dockerfile
+          git checkout --ours src/app.html
+          git checkout --ours update_ollama_models.sh
+      
           git add .
-          git commit -m "Merge upstream + préservation fichiers personnalisés"
+
+          git commit -m "Merge upstream + préservation des fichiers personnalisés"
+
           git push origin main
+
 
