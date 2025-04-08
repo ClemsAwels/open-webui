@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 0 * * *' # Exécution quotidienne
   repository_dispatch: # Déclenchement manuel via API
+  push:
+    branches:
+      - 'main'
+      - 'develop'
 
 jobs:
   sync-and-update:
