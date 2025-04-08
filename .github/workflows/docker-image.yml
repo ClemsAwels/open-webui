@@ -26,6 +26,8 @@ jobs:
 
       - name: Fusionner les changements
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git merge upstream/main --no-commit --no-ff --allow-unrelated-histories
           # Conserver les fichiers personnalisés
           git checkout HEAD -- frontend/static/favicon.png
