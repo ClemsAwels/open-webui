@@ -8,7 +8,7 @@ on:
       - 'develop'
 
 env:
-  DOCKER_IMAGE_NAME: openwebui-awels
+  DOCKER_IMAGE_NAME: clemsawels/openwebui-awels
 
 jobs:
   build-and-push:
