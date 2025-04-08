@@ -24,7 +24,16 @@ jobs:
         run: |
           git merge upstream/main --no-commit --no-ff
           # Conserver les fichiers personnalisés
-          git checkout HEAD -- frontend/static/*
+          git checkout HEAD -- frontend/static/favicon.png
+          git checkout HEAD -- frontend/static/opensearch.xml
           git checkout HEAD -- src/lib/constants.ts
+          git checkout HEAD -- backend/open_webui/static/favicon.ico
+          git checkout HEAD -- backend/open_webui/static/favicon.png
+          git checkout HEAD -- static/static/*
+          git checkout HEAD -- src/lib/components/layout/Sidebar/UserMenu.svelte
+          git checkout HEAD -- config.js
+          git checkout HEAD -- generate-config.sh
+          git checkout HEAD -- Dockerfile
+          git checkout HEAD -- src/app.html
           git commit -m "Merge upstream + préservation customisations"
           git push origin main
