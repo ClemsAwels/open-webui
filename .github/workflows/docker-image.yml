@@ -26,7 +26,7 @@ jobs:
 
       - name: Fusionner les changements
         run: |
-          git merge upstream/main --no-commit --no-ff
+          git merge upstream/main --no-commit --no-ff --allow-unrelated-histories
           # Conserver les fichiers personnalisés
           git checkout HEAD -- frontend/static/favicon.png
           git checkout HEAD -- frontend/static/opensearch.xml
@@ -39,5 +39,6 @@ jobs:
           git checkout HEAD -- generate-config.sh
           git checkout HEAD -- Dockerfile
           git checkout HEAD -- src/app.html
+          git checkout HEAD -- .github/*
           git commit -m "Merge upstream + préservation customisations"
           git push origin main
