@@ -6,6 +6,8 @@ on:
     branches:
       - 'main'
       - 'develop'
+  schedule:
+    - cron: '11 16 * * *'
 
 env:
   DOCKER_IMAGE_NAME: clemsawels/openwebui-awels
