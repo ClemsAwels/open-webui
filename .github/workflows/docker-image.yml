@@ -52,14 +52,21 @@ jobs:
               # Si c'est un répertoire, checkout tous les fichiers à l'intérieur
               find "$file" -type f -print0 | while IFS= read -r -d $'\0' f; do
                 git checkout --ours "$f"
+                git add "$f"
               done
             else
               git checkout --ours "$file"
+              git add "$file"
             fi
           done
 
-          # Résoudre les conflits en gardant "ours" pour les fichiers spécifiés, et "theirs" pour les autres
-          git add .
+          # Accepter les modifications de "theirs" (upstream) pour les autres fichiers
+          git ls-files -u | cut -d ' ' -f 2 | while read -r conflicted_file; do
+            echo "Résolution du conflit pour $conflicted_file en utilisant 'theirs'"
+            git checkout --theirs "$conflicted_file"
+            git add "$conflicted_file"
+          done
+
           # Tentative de commit, même si des conflits persistent (sera géré plus loin)
           git commit -m "Merge upstream + préservation des fichiers personnalisés" || true
 
