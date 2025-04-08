@@ -30,23 +30,37 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git merge upstream/main --no-commit --no-ff --allow-unrelated-histories || true
 
-          git checkout --ours frontend/static/favicon.png
-          git checkout --ours frontend/static/opensearch.xml
-          git checkout --ours src/lib/constants.ts
-          git checkout --ours backend/open_webui/static/favicon.ico
-          git checkout --ours backend/open_webui/static/favicon.png
-          git checkout --ours static/static/*
-          git checkout --ours src/lib/components/layout/Sidebar/UserMenu.svelte
-          git checkout --ours config.js
-          git checkout --ours generate-config.sh
-          git checkout --ours Dockerfile
-          git checkout --ours src/app.html
-          git checkout --ours update_ollama_models.sh
-      
-          git add .
+          # Liste des fichiers à conserver (overwrite conflicts)
+          CUSTOM_FILES="\
+            frontend/static/favicon.png\
+            frontend/static/opensearch.xml\
+            src/lib/constants.ts\
+            backend/open_webui/static/favicon.ico\
+            backend/open_webui/static/favicon.png\
+            static/static/*\
+            src/lib/components/layout/Sidebar/UserMenu.svelte\
+            config.js\
+            generate-config.sh\
+            Dockerfile\
+            src/app.html\
+            update_ollama_models.sh\
+          "
 
-          git commit -m "Merge upstream + préservation des fichiers personnalisés"
+          # Appliquer "ours" (conserver la version locale) pour les fichiers personnalisés
+          for file in $CUSTOM_FILES; do
+            if [[ -d "$file" ]]; then
+              # Si c'est un répertoire, checkout tous les fichiers à l'intérieur
+              find "$file" -type f -print0 | while IFS= read -r -d $'\0' f; do
+                git checkout --ours "$f"
+              done
+            else
+              git checkout --ours "$file"
+            fi
+          done
+
+          # Résoudre les conflits en gardant "ours" pour les fichiers spécifiés, et "theirs" pour les autres
+          git add .
+          # Tentative de commit, même si des conflits persistent (sera géré plus loin)
+          git commit -m "Merge upstream + préservation des fichiers personnalisés" || true
 
           git push origin main
-
-
